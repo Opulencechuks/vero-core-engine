@@ -152,6 +152,25 @@ fn test_update_param_requires_admin() {
 }
 
 #[test]
+fn test_update_param_rejects_version_keys() {
+    let env = Env::default();
+    let (client, admin, _) = initialized_client(&env);
+
+    let keys = [
+        symbol_short!("VERSION"),
+        symbol_short!("VER_INIT"),
+        symbol_short!("ZK_COUNT"),
+    ];
+    let payload = BytesN::from_array(&env, &[4u8; 32]);
+    let commitment = commitment(&env, &admin, 1, &payload);
+
+    for param_key in keys {
+        let result = client.try_update_param(&admin, &param_key, &999, &commitment, &payload);
+        assert!(result.is_err());
+    }
+}
+
+#[test]
 fn test_zk_proof_registration_for_current_state_root() {
     let env = Env::default();
     let (client, admin, contract_id) = initialized_client(&env);
@@ -231,6 +250,42 @@ fn test_batch_update_param_success() {
     };
 
     client.batch_update_param(&admin, &params, &commitment, &payload);
+}
+
+#[test]
+fn test_batch_update_param_rejects_version_keys() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let contract_id = env.register_contract(None, ControlPlane);
+    let client = ControlPlaneClient::new(&env, &contract_id);
+    let admin = Address::generate(&env);
+    let author = Address::generate(&env);
+
+    client.initialize(&admin);
+
+    let keys = [
+        symbol_short!("VERSION"),
+        symbol_short!("VER_INIT"),
+        symbol_short!("ZK_COUNT"),
+    ];
+
+    for key in keys {
+        let mut params = soroban_sdk::Vec::new(&env);
+        params.push_back((key, 999));
+
+        let payload = BytesN::from_array(&env, &[2u8; 32]);
+        let hash = compute_commitment(&[0u8; 32], 2, &payload.to_array());
+
+        let commitment = StateCommitment {
+            sequence: 2,
+            state_hash: BytesN::from_array(&env, &hash),
+            ledger: 101,
+            author: author.clone(),
+        };
+
+        let result = client.try_batch_update_param(&admin, &params, &commitment, &payload);
+        assert!(result.is_err());
+    }
 }
 
 fn proxy_initialized_client(env: &Env) -> (UpgradeableProxyClient<'_>, Address) {

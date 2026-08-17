@@ -45,6 +45,9 @@ const RESERVED_KEYS: &[Symbol] = &[
     symbol_short!("SNAPC"),
     symbol_short!("SNAPL"),
     symbol_short!("OUTFLOWS"),
+    symbol_short!("VERSION"),
+    symbol_short!("VER_INIT"),
+    symbol_short!("ZK_COUNT"),
 ];
 
 #[contracterror]
