@@ -55,7 +55,8 @@ ENV
   fi
 
   # Symlink security docs into security/
-  [[ -L "$SECURITY_DIR/SECURITY.md" ]] || ln -s "$ROOT/SECURITY.md" "$SECURITY_DIR/SECURITY.md"
+  rm -f "$SECURITY_DIR/SECURITY.md"
+  ln -s "$ROOT/SECURITY.md" "$SECURITY_DIR/SECURITY.md"
 
   log "Scaffold complete."
 }
